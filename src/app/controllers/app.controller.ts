@@ -10,12 +10,37 @@ export class AppController {
   }
 
   private initializeRouter() {
+    this.router.get("/login", (req: Request, res: Response)=> {
+      res.render("login");
+    });
+    this.router.post("/login", (req: any, res: Response)=> {
+      req.session.user = req.body.username;
+      res.redirect("/");
+    });
+
+    this.router.get("/logout", (req: any, res: Response) => {
+      req.session.destroy(() => {
+        res.redirect("/");
+      });
+    });
+
+    //Protect the homepage
+    this.router.use((req: any, res: Response, next) => {
+      if(req.session.user){
+        next();
+      }
+      else {
+        res.redirect("/login");
+      }
+    });
 
     // Serve the home page
-    this.router.get("/", (req: Request, res: Response) => {
+    this.router.get("/", (req: any, res: Response) => {
       try {
         // Render the "home" template as HTML
-        res.render("home");
+        res.render("home", {
+          user: req.session.user
+        });
       } catch (err) {
         this.log.error(err);
       }
