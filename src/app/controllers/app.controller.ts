@@ -33,6 +33,15 @@ export class AppController {
         res.redirect("/login");
       }
     });
+    const enforceLogin= (req: any, res: Response, next: any) => {
+      if(req.session.user){
+        next();
+      }
+      else {
+        res.redirect("/login");
+      }
+    }
+    this.router.use(enforceLogin);
 
     // Serve the home page
     this.router.get("/", (req: any, res: Response) => {
