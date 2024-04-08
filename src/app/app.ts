@@ -2,6 +2,7 @@
 import express, { Application } from "express";
 import session from "express-session";
 import { pino } from 'pino';
+import path from 'path';
 
 // Import our code (controllers and middleware)
 import { AppController } from "./controllers/app.controller";
@@ -46,7 +47,11 @@ class App {
 
     // Set up handlebars for our templating
     HandlebarsMiddleware.setup(this.app);
-
+    
+    this.app.get('/signup', (req, res) => {
+      res.sendFile(path.join('views', 'signup.hbs'));
+  });
+  
     // Tell express what to do when our routes are visited
     this.app.use(this.appController.router);
     this.app.use(this.errorMiddleware.router);

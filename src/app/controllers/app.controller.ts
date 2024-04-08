@@ -1,4 +1,5 @@
 import { Request, Response, Router } from "express";
+import path from "path";
 import { pino } from 'pino';
 
 export class AppController {
@@ -17,6 +18,9 @@ export class AppController {
       req.session.user = req.body.username;
       res.redirect("/");
     });
+    this.router.get('/signup', (req: any, res: Response) => {
+      res.sendFile(path.join('views', 'signup.hbs'));
+  });
 
     this.router.get("/logout", (req: any, res: Response) => {
       req.session.destroy(() => {
