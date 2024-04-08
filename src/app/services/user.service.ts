@@ -1,54 +1,34 @@
-import { User } from '../../models/user';
-import express, { Request, Response } from 'express';
+// user.service.ts
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
-class UserService {
-    private users: User[] = [];
+export class UserService {
+  private prisma: PrismaClient;
 
-    createUser(username: string, email: string, password: string): User {
-        const user: User = {
-            username,
-            email,
-            password
-        };
+  constructor() {
+    this.prisma = new PrismaClient();
+  }
 
-        // Save the user to the database
-        this.users.push(user);
+  async createUser(username: string, email: string, password: string) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await this.prisma.user.create({
+      data: {
+        username: username,
+        email: email,
+        password: hashedPassword,
+      },
+    });
+    return user;
+  }
 
-        return user;
-    }
-
-    authenticateUser(username: string, password: string): User | null {
-        const user = this.users.find(u => u.username === username && u.password === password);
-
-        return user || null;
-    }
-}
-const router = express.Router();
-const userService = new UserService();
-
-router.post('/signup', (req: Request, res: Response) => {
-    const { username, password } = req.body;
-
-    const user = userService.createUser(username, '', password);
-
-    (req.session as any).username = user.username;
-
-    res.redirect('/homepage');
-});
-
-router.post('/login', (req: Request, res: Response) => {
-    const { username, password } = req.body;
-
-    const user = userService.authenticateUser(username, password);
-
-    if (user) {
-        (req.session as any).username = user.username;
-        res.redirect('/homepage');
+  async authenticateUser(username: string, password: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { username: username },
+    });
+    if (user && await bcrypt.compare(password, user.password)) {
+      return user;
     } else {
-        res.status(401).send('Invalid username or password');
+      return null;
     }
-});
-
-export { router };
-
-export default UserService;
+  }
+}
